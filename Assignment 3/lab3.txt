@@ -1,0 +1,63 @@
+I started by downloading the Coreutils 7.6 package using the command
+> wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-7.6.tar.gz
+and unzipped it using the command
+> tar -zxvf coreutils-7.6.tar.gz 
+
+I then made a directory to install the package in using the command
+> mkdir Coreutilsinstall
+
+Then I configured the package so it would install in the directory 
+I made using the command
+> ./configure  --prefix=/u/cs/ugrad/jianan/CoreutilsInstall
+
+Finally I could compile and install the package using the commands
+> make
+> make install
+
+After the package is installed, we can reproduce the broken ls bug 
+by running the ls program included in the package by using the 
+following commands
+> cd CoreutilsInstall/bin
+> ./ls -l
+
+The next step is to create a patch file which I accomplished by 
+using emacs to create a file mypatch with the copied text from 
+Brady's patch. I placed the file in the coreutils-7.6 directory 
+and using the following command to apply the patch
+> patch -p1 < mypatch
+
+I then ran make again and then ran the ls program in the 
+/coreutils-7.6/src directory to observe that the data format has been fixed. 
+
+The command that was run as a result of using make was make 
+all-recursive. This command goes through each directory in 
+coreutils-7.6 and sees if there are any changes in the source 
+files based on the Makefile. It found that the only changes 
+made were in the src folder and only recompiled those files. 
+We only used make and not make install because we want to 
+have two copies of coreutils, one in the CoreutilsInstall 
+directory and another in the coreutils-7.6/src directory. 
+The first copy has the ls bug while the second one is patched. 
+
+To test that the change fixes the bug, I created two directories, 
+new and old, and marked the old directory to be 20 years old 
+using the following commands
+> mkdir new
+> mkdir old
+> touch -t 9612071200
+
+I then ran the two versions of ls, one in CoreutilsInstall and 
+the other in coreutils-7.6/bin and compared the results.
+
+> ~/CoreutilsInstall/bin/ls -l
+drwxr-xr-x  2 jianan csugrad     4096 2017-01-25 19:24 new
+drwxr-xr-x  2 jianan csugrad     4096 1996-12-07 12:00 oldu 
+
+> ~/coreutils-7.6/src/ls -l
+drwxr-xr-x  2 jianan csugrad     4096 Jan 25 19:24 new
+drwxr-xr-x  2 jianan csugrad     4096 Dec  7  1996 old
+
+The English format date doesn’t include the year when the file is 
+less than an year old while it does when the file is greater than 
+a year old.
+

@@ -1,0 +1,39 @@
+I started the homework by checking out version 3.0 of Diffutils from my repository into a new branch named “quote” using the following command:
+> git checkout v3.0 -b quote
+
+I then installed my patch that I had created in the lab using the following command:
+> patch -p1 < ~/quote-3.0-patch.txt
+
+At this point I opened one of the 6 files that were patched using emacs. I then used the command C-x 4 a to create a ChangeLog for that file and wrote a description of how the file was modified. I repeated this process for all of the 6 files. 
+
+Now I committed my changes to the new branch using the ChangeLog entry as the commit message by using the following commands:
+> git add .
+> git commit -F ChangeLog
+
+Then I created a formatted patch into the file formatted-patch.txt using the following command:
+> git format-patch -1 —stdout > formatted-patch.txt
+
+Now I could pair up with a partner and verify that my partner’s patch works. I first checked out version 3.0 again into a temporary branch named partner and then applied my partner’s patch (partner-formatted-patch.txt) and built the resulting system before finally checking that it works. This was accomplished using the following commands:
+> git checkout v3.0 -b partner
+> git am < ~/partner-formatted-patch.txt
+> ./bootstrap
+> ./configure
+> make
+> make check
+
+I also checked that the ChangeLog entry works by first running the following command:
+> make distdir
+
+I then inspected the ChangeLog file by opening it with emacs:
+> emacs diffutils*/ChangeLog
+
+I verified that the ChangeLog contains the same content as the ChangeLog entry I had created for my patch.
+
+For the last part of the homework, I first connected to the lab windows machine using remote desktop connection from my computer. Then I SSHed into the linux server using PuTTY. After that I navigated to GNU Emacs’s git repository master branch on SEASnet and ran the gitk command on it. The commands are as follows:
+> cd ~eggert/src/gnu/emacs
+> gitk
+
+After the gitk application opened, I scrolled through the top right subwindow until I found the newest merge that is not newer than 2015-1-25, which happened to be 2015-01-24 19:00:41. I took a screenshot of my view and recorded my findings.
+
+
+

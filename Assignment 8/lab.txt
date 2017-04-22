@@ -1,0 +1,532 @@
+I started the lab by writing the following C program.
+
+#include <stdio.h>
+#include <math.h>
+
+int main()
+{
+  printf("%.17g", cos(sqrt(3.0)));
+  return 0;
+}
+
+I then compiled and ran the program.
+> gcc -o math math.c
+> ./math
+
+This gave me an output of -0.16055653857469052 which is the correct value of the cosine of the square root of 3.0.
+
+I then ran the ldd command with my program using 
+> ldd ./math
+to see which dynamic libraries my program uses. This gave me the following output.
+
+linux-vdso.so.1 =>  (0x00007fff58305000)
+libc.so.6 => /lib64/libc.so.6 (0x00007feec0612000)
+/lib64/ld-linux-x86-64.so.2 (0x00007feec09f9000)
+
+Next I used the strace command to see which system calls my program makes.
+> strace ./math
+
+This gave me the following output.
+
+execve("./math", ["./math"], [/* 32 vars */]) = 0
+brk(0)                                  = 0x1b66000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f7041b89000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=147849, ...}) = 0
+mmap(NULL, 147849, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f7041b64000
+close(3)                                = 0
+open("/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\34\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2118128, ...}) = 0
+mmap(NULL, 3932672, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f70415aa000
+mprotect(0x7f7041760000, 2097152, PROT_NONE) = 0
+mmap(0x7f7041960000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1b6000) = 0x7f7041960000
+mmap(0x7f7041966000, 16896, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f7041966000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f7041b63000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f7041b61000
+arch_prctl(ARCH_SET_FS, 0x7f7041b61740) = 0
+mprotect(0x7f7041960000, 16384, PROT_READ) = 0
+mprotect(0x600000, 4096, PROT_READ)     = 0
+mprotect(0x7f7041b8a000, 4096, PROT_READ) = 0
+munmap(0x7f7041b64000, 147849)          = 0
+fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(136, 12), ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f7041b88000
+write(1, "-0.16055653857469052", 20-0.16055653857469052)    = 20
+exit_group(0)                           = ?
+
+Among the system calls made by my program, open, close, read, mmap, mprotect, and fstat are related to dynamic linking. 
+The open and close system calls open and close the libraries needed to be dynamically linked. The read system call 
+reads from the ELF of the dynamic libraries. mmap creates a mapping between the dynamic libraries and the memory. 
+mprotect protects the region of memory for the library code. fstat determines the size of memory needed to link 
+to the dynamic library so that it can be allocated. 
+
+Since my student ID is 604565186, I ran the following command to get a list of commands to investigate:
+> ls /usr/bin | awk ‘NR%101==604565186%101’
+
+I got the following list:
+apt
+cdrecord
+cups-config
+dracut
+fftest
+g-ir-scanner
+gst-launch-0.10
+hwloc-ls
+javaws.itweb
+kmimetypefinder
+ldns-zcat
+makekdewidgets4
+nepomukserver
+ocs
+pdfimages
+pmie
+qcatool2
+rsync
+size
+systemd-hwdb
+truncate
+wmf2svg
+xstdcmap
+
+Next I invoked ldd on each command in the list and recorded the output.
+
+> ldd /usr/bin/apt
+
+	linux-vdso.so.1 =>  (0x00007ffded36f000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f535fc46000)
+	libjli.so => /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.121-2.6.8.0.el7_3.x86_64/jre/lib/amd64/jli/libjli.so (0x00007f535fa37000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f535f833000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f535f472000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f535fe88000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007f535f25b000)
+
+> ldd /usr/bin/cdrecord
+
+	linux-vdso.so.1 =>  (0x00007ffd14b56000)
+	libusal.so.0 => /lib64/libusal.so.0 (0x00007f8c6ea66000)
+	librols.so.0 => /lib64/librols.so.0 (0x00007f8c6e85c000)
+	libcap.so.2 => /lib64/libcap.so.2 (0x00007f8c6e656000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f8c6e295000)
+	libattr.so.1 => /lib64/libattr.so.1 (0x00007f8c6e090000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f8c6eca6000)
+
+> ldd /usr/bin/cups-config
+
+	not a dynamic executable (this is because cups-config is a shell script)
+
+> ldd /usr/bin/dracut
+
+	not a dynamic executable (this is because dracut is a shell script)
+
+> ldd /usr/bin/fftest
+
+	linux-vdso.so.1 =>  (0x00007fff803ea000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f1a47f22000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f1a48309000)
+
+> ldd /usr/bin/g-ir-scanner
+
+	not a dynamic executable (this is because g-ir-scanner is a python script)
+
+> ldd /usr/bin/gst-launch-0.10
+
+	linux-vdso.so.1 =>  (0x00007ffd9f918000)
+	libgstreamer-0.10.so.0 => /lib64/libgstreamer-0.10.so.0 (0x00007f7e9d0db000)
+	libxml2.so.2 => /lib64/libxml2.so.2 (0x00007f7e9cd71000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007f7e9ca6e000)
+	libgobject-2.0.so.0 => /lib64/libgobject-2.0.so.0 (0x00007f7e9c81e000)
+	libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 (0x00007f7e9c61c000)
+	libgmodule-2.0.so.0 => /lib64/libgmodule-2.0.so.0 (0x00007f7e9c417000)
+	libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 (0x00007f7e9c0e0000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f7e9bedc000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f7e9bcbf000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f7e9b8fe000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007f7e9b6e8000)
+	liblzma.so.5 => /lib64/liblzma.so.5 (0x00007f7e9b4c1000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f7e9d3ea000)
+	libffi.so.6 => /lib64/libffi.so.6 (0x00007f7e9b2b9000)
+
+> ldd /usr/bin/hwloc-ls
+
+	linux-vdso.so.1 =>  (0x00007ffe8e1f7000)
+	libhwloc.so.5 => /lib64/libhwloc.so.5 (0x00007fcbe211b000)
+	libnuma.so.1 => /lib64/libnuma.so.1 (0x00007fcbe1f0f000)
+	libltdl.so.7 => /lib64/libltdl.so.7 (0x00007fcbe1d04000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007fcbe1a02000)
+	libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007fcbe17d8000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fcbe1416000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fcbe1200000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fcbe237b000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007fcbe0ffc000)
+
+> ldd /usr/bin/javaws.itweb
+
+	not a dynamic executable (this is because javaws.itweb is a shell script)
+
+> ldd /usr/bin/ldns-zcat
+
+	linux-vdso.so.1 =>  (0x00007ffd309bc000)
+	libpcap.so.1 => /lib64/libpcap.so.1 (0x00007ff3afd9e000)
+	libldns.so.1 => /lib64/libldns.so.1 (0x00007ff3afb45000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007ff3af783000)
+	libcrypto.so.10 => /lib64/libcrypto.so.10 (0x00007ff3af399000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007ff3af195000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007ff3b0005000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007ff3aef7e000)
+
+> ldd /usr/bin/makekdewidgets4
+
+	linux-vdso.so.1 =>  (0x00007ffc451a7000)
+	libkdecore.so.5 => /lib64/libkdecore.so.5 (0x00007fd0bb324000)
+	libQtDBus.so.4 => /lib64/libQtDBus.so.4 (0x00007fd0bb0a6000)
+	libQtCore.so.4 => /lib64/libQtCore.so.4 (0x00007fd0babba000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fd0ba99e000)
+	libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007fd0ba696000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007fd0ba393000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fd0ba17d000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fd0b9dbc000)
+	libQtNetwork.so.4 => /lib64/libQtNetwork.so.4 (0x00007fd0b9a75000)
+	libQtXml.so.4 => /lib64/libQtXml.so.4 (0x00007fd0b9831000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007fd0b961b000)
+	libbz2.so.1 => /lib64/libbz2.so.1 (0x00007fd0b940a000)
+	liblzma.so.5 => /lib64/liblzma.so.5 (0x00007fd0b91e4000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x00007fd0b8fca000)
+	libfam.so.0 => /lib64/libfam.so.0 (0x00007fd0b8dc1000)
+	libdbus-1.so.3 => /lib64/libdbus-1.so.3 (0x00007fd0b8b79000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007fd0b8975000)
+	libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 (0x00007fd0b8772000)
+	libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 (0x00007fd0b843b000)
+	librt.so.1 => /lib64/librt.so.1 (0x00007fd0b8233000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fd0bb82e000)
+	libssl.so.10 => /lib64/libssl.so.10 (0x00007fd0b7fc4000)
+	libcrypto.so.10 => /lib64/libcrypto.so.10 (0x00007fd0b7bda000)
+	libgssapi_krb5.so.2 => /lib64/libgssapi_krb5.so.2 (0x00007fd0b798b000)
+	libkrb5.so.3 => /lib64/libkrb5.so.3 (0x00007fd0b76a4000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x00007fd0b74a0000)
+	libk5crypto.so.3 => /lib64/libk5crypto.so.3 (0x00007fd0b726d000)
+	libkrb5support.so.0 => /lib64/libkrb5support.so.0 (0x00007fd0b705e000)
+	libkeyutils.so.1 => /lib64/libkeyutils.so.1 (0x00007fd0b6e5a000)
+	libselinux.so.1 => /lib64/libselinux.so.1 (0x00007fd0b6c32000)
+	libpcre.so.1 => /lib64/libpcre.so.1 (0x00007fd0b69d1000)
+
+> ldd /usr/bin/nepomukserver
+
+	linux-vdso.so.1 =>  (0x00007ffe2b7ca000)
+	libkdeinit4_nepomukserver.so => /lib64/libkdeinit4_nepomukserver.so (0x00007fb65f4c8000)
+	libkdeui.so.5 => /lib64/libkdeui.so.5 (0x00007fb65ee41000)
+	libkdecore.so.5 => /lib64/libkdecore.so.5 (0x00007fb65e95c000)
+	libQtDBus.so.4 => /lib64/libQtDBus.so.4 (0x00007fb65e6de000)
+	libQtCore.so.4 => /lib64/libQtCore.so.4 (0x00007fb65e1f3000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fb65dfd6000)
+	libQtGui.so.4 => /lib64/libQtGui.so.4 (0x00007fb65d2fb000)
+	libQtSvg.so.4 => /lib64/libQtSvg.so.4 (0x00007fb65d0a3000)
+	libsoprano.so.4 => /lib64/libsoprano.so.4 (0x00007fb65cdb5000)
+	libsopranoserver.so.1 => /lib64/libsopranoserver.so.1 (0x00007fb65cb8b000)
+	libsopranoclient.so.1 => /lib64/libsopranoclient.so.1 (0x00007fb65c93f000)
+	libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007fb65c636000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007fb65c334000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fb65c11e000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fb65bd5c000)
+	libSM.so.6 => /lib64/libSM.so.6 (0x00007fb65bb54000)
+	libICE.so.6 => /lib64/libICE.so.6 (0x00007fb65b938000)
+	libX11.so.6 => /lib64/libX11.so.6 (0x00007fb65b5f9000)
+	libXext.so.6 => /lib64/libXext.so.6 (0x00007fb65b3e7000)
+	libXft.so.2 => /lib64/libXft.so.2 (0x00007fb65b1d1000)
+	libXau.so.6 => /lib64/libXau.so.6 (0x00007fb65afcc000)
+	libXpm.so.4 => /lib64/libXpm.so.4 (0x00007fb65adba000)
+	libQtXml.so.4 => /lib64/libQtXml.so.4 (0x00007fb65ab76000)
+	libqca.so.2 => /lib64/libqca.so.2 (0x00007fb65a85d000)
+	libattica.so.0.4 => /lib64/libattica.so.0.4 (0x00007fb65a563000)
+	libQtNetwork.so.4 => /lib64/libQtNetwork.so.4 (0x00007fb65a21d000)
+	libdbusmenu-qt.so.2 => /lib64/libdbusmenu-qt.so.2 (0x00007fb659feb000)
+	libXtst.so.6 => /lib64/libXtst.so.6 (0x00007fb659de5000)
+	libXcursor.so.1 => /lib64/libXcursor.so.1 (0x00007fb659bda000)
+	libXfixes.so.3 => /lib64/libXfixes.so.3 (0x00007fb6599d3000)
+	libXrender.so.1 => /lib64/libXrender.so.1 (0x00007fb6597c9000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007fb6595b3000)
+	libbz2.so.1 => /lib64/libbz2.so.1 (0x00007fb6593a2000)
+	liblzma.so.5 => /lib64/liblzma.so.5 (0x00007fb65917c000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x00007fb658f62000)
+	libfam.so.0 => /lib64/libfam.so.0 (0x00007fb658d59000)
+	libdbus-1.so.3 => /lib64/libdbus-1.so.3 (0x00007fb658b11000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007fb65890d000)
+	libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 (0x00007fb65870a000)
+	libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 (0x00007fb6583d3000)
+	librt.so.1 => /lib64/librt.so.1 (0x00007fb6581cb000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fb65f704000)
+	libpng15.so.15 => /lib64/libpng15.so.15 (0x00007fb657f9f000)
+	libfreetype.so.6 => /lib64/libfreetype.so.6 (0x00007fb657cf9000)
+	libgobject-2.0.so.0 => /lib64/libgobject-2.0.so.0 (0x00007fb657aa9000)
+	libXi.so.6 => /lib64/libXi.so.6 (0x00007fb657898000)
+	libXrandr.so.2 => /lib64/libXrandr.so.2 (0x00007fb65768e000)
+	libXinerama.so.1 => /lib64/libXinerama.so.1 (0x00007fb65748b000)
+	libfontconfig.so.1 => /lib64/libfontconfig.so.1 (0x00007fb65724d000)
+	libuuid.so.1 => /lib64/libuuid.so.1 (0x00007fb657048000)
+	libxcb.so.1 => /lib64/libxcb.so.1 (0x00007fb656e25000)
+	libssl.so.10 => /lib64/libssl.so.10 (0x00007fb656bb7000)
+	libcrypto.so.10 => /lib64/libcrypto.so.10 (0x00007fb6567cc000)
+	libffi.so.6 => /lib64/libffi.so.6 (0x00007fb6565c4000)
+	libexpat.so.1 => /lib64/libexpat.so.1 (0x00007fb656399000)
+	libgssapi_krb5.so.2 => /lib64/libgssapi_krb5.so.2 (0x00007fb65614b000)
+	libkrb5.so.3 => /lib64/libkrb5.so.3 (0x00007fb655e64000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x00007fb655c5f000)
+	libk5crypto.so.3 => /lib64/libk5crypto.so.3 (0x00007fb655a2d000)
+	libkrb5support.so.0 => /lib64/libkrb5support.so.0 (0x00007fb65581e000)
+	libkeyutils.so.1 => /lib64/libkeyutils.so.1 (0x00007fb655619000)
+	libselinux.so.1 => /lib64/libselinux.so.1 (0x00007fb6553f2000)
+	libpcre.so.1 => /lib64/libpcre.so.1 (0x00007fb655190000)
+
+> ldd /usr/bin/ocs
+
+	not a dynamic executable (this is because ocs is a shell script)
+
+> ldd /usr/bin/pdfimages
+
+	linux-vdso.so.1 =>  (0x00007ffd5fdef000)
+	libpoppler.so.46 => /lib64/libpoppler.so.46 (0x00007f30d52ca000)
+	liblcms2.so.2 => /lib64/liblcms2.so.2 (0x00007f30d5070000)
+	libtiff.so.5 => /lib64/libtiff.so.5 (0x00007f30d4dfb000)
+	libjpeg.so.62 => /lib64/libjpeg.so.62 (0x00007f30d4ba6000)
+	libpng15.so.15 => /lib64/libpng15.so.15 (0x00007f30d497b000)
+	libopenjpeg.so.1 => /lib64/libopenjpeg.so.1 (0x00007f30d4756000)
+	libfontconfig.so.1 => /lib64/libfontconfig.so.1 (0x00007f30d4519000)
+	libfreetype.so.6 => /lib64/libfreetype.so.6 (0x00007f30d4273000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f30d4056000)
+	libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007f30d3d4e000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007f30d3a4c000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007f30d3835000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f30d3474000)
+	libjbig.so.2.0 => /lib64/libjbig.so.2.0 (0x00007f30d3268000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007f30d3051000)
+	libexpat.so.1 => /lib64/libexpat.so.1 (0x00007f30d2e27000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f30d577f000)
+
+> ldd /usr/bin/pmie
+
+	linux-vdso.so.1 =>  (0x00007fffe57f5000)
+	libpcp.so.3 => /lib64/libpcp.so.3 (0x00007f9e62e20000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007f9e62b1e000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f9e6275c000)
+	libssl3.so => /lib64/libssl3.so (0x00007f9e62519000)
+	libnss3.so => /lib64/libnss3.so (0x00007f9e621f3000)
+	libnspr4.so => /lib64/libnspr4.so (0x00007f9e61fb4000)
+	libsasl2.so.3 => /lib64/libsasl2.so.3 (0x00007f9e61d97000)
+	libavahi-common.so.3 => /lib64/libavahi-common.so.3 (0x00007f9e61b8a000)
+	libavahi-client.so.3 => /lib64/libavahi-client.so.3 (0x00007f9e61978000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f9e6175c000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f9e61558000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f9e632ff000)
+	libnssutil3.so => /lib64/libnssutil3.so (0x00007f9e6132b000)
+	libplc4.so => /lib64/libplc4.so (0x00007f9e61126000)
+	libplds4.so => /lib64/libplds4.so (0x00007f9e60f22000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007f9e60d0b000)
+	librt.so.1 => /lib64/librt.so.1 (0x00007f9e60b03000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f9e608e9000)
+	libcrypt.so.1 => /lib64/libcrypt.so.1 (0x00007f9e606b1000)
+	libdbus-1.so.3 => /lib64/libdbus-1.so.3 (0x00007f9e60469000)
+	libfreebl3.so => /lib64/libfreebl3.so (0x00007f9e60265000)
+
+> ldd /usr/bin/qcatool2
+
+	linux-vdso.so.1 =>  (0x00007ffee6deb000)
+	libqca.so.2 => /lib64/libqca.so.2 (0x00007fae9918f000)
+	libQtCore.so.4 => /lib64/libQtCore.so.4 (0x00007fae98ca4000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fae98a87000)
+	libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007fae9877f000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007fae9847d000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fae98266000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fae97ea5000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007fae97c8f000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007fae97a8a000)
+	libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 (0x00007fae97888000)
+	libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 (0x00007fae97551000)
+	librt.so.1 => /lib64/librt.so.1 (0x00007fae97348000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fae994cd000)
+
+> ldd /usr/bin/rsync
+
+	linux-vdso.so.1 =>  (0x00007fff655f9000)
+	libacl.so.1 => /lib64/libacl.so.1 (0x00007f1e43c7a000)
+	libpopt.so.0 => /lib64/libpopt.so.0 (0x00007f1e43a70000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f1e436ae000)
+	libattr.so.1 => /lib64/libattr.so.1 (0x00007f1e434a9000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f1e44127000)
+
+> ldd /usr/bin/size
+
+	linux-vdso.so.1 =>  (0x00007ffcc69ab000)
+	libbfd-2.25.1-22.base.el7.so => /lib64/libbfd-2.25.1-22.base.el7.so (0x00007fc23425a000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007fc234044000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007fc233e3f000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fc233a7e000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fc233868000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fc2345a9000)
+
+> ldd /usr/bin/systemd-hwdb
+
+	linux-vdso.so.1 =>  (0x00007ffc6079a000)
+	libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f1516854000)
+	librt.so.1 => /lib64/librt.so.1 (0x00007f151664c000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007f1516435000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f1516219000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f1515e58000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f1516ab3000)
+	libpcre.so.1 => /lib64/libpcre.so.1 (0x00007f1515bf6000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f15159f2000)
+
+> ldd /usr/bin/truncate
+
+	linux-vdso.so.1 =>  (0x00007ffcfd3d1000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007ff516626000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007ff516a0d000)
+
+> ldd /usr/bin/wmf2svg
+
+	linux-vdso.so.1 =>  (0x00007fff519d6000)
+	libwmf-0.2.so.7 => /lib64/libwmf-0.2.so.7 (0x00007fd1e126d000)
+	libwmflite-0.2.so.7 => /lib64/libwmflite-0.2.so.7 (0x00007fd1e1050000)
+	libfreetype.so.6 => /lib64/libfreetype.so.6 (0x00007fd1e0da9000)
+	libX11.so.6 => /lib64/libX11.so.6 (0x00007fd1e0a6b000)
+	libxml2.so.2 => /lib64/libxml2.so.2 (0x00007fd1e0701000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007fd1e04fc000)
+	libjpeg.so.62 => /lib64/libjpeg.so.62 (0x00007fd1e02a7000)
+	libpng15.so.15 => /lib64/libpng15.so.15 (0x00007fd1e007c000)
+	libz.so.1 => /lib64/libz.so.1 (0x00007fd1dfe65000)
+	libm.so.6 => /lib64/libm.so.6 (0x00007fd1dfb63000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fd1df947000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fd1df585000)
+	libxcb.so.1 => /lib64/libxcb.so.1 (0x00007fd1df363000)
+	liblzma.so.5 => /lib64/liblzma.so.5 (0x00007fd1df13d000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fd1e14ea000)
+	libXau.so.6 => /lib64/libXau.so.6 (0x00007fd1def38000)
+
+> ldd /usr/bin/xstdcmap
+
+	linux-vdso.so.1 =>  (0x00007ffe6d3fd000)
+	libXmu.so.6 => /lib64/libXmu.so.6 (0x00007f42b094c000)
+	libXt.so.6 => /lib64/libXt.so.6 (0x00007f42b06e5000)
+	libX11.so.6 => /lib64/libX11.so.6 (0x00007f42b03a6000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f42affe5000)
+	libXext.so.6 => /lib64/libXext.so.6 (0x00007f42afdd3000)
+	libSM.so.6 => /lib64/libSM.so.6 (0x00007f42afbca000)
+	libICE.so.6 => /lib64/libICE.so.6 (0x00007f42af9ae000)
+	libxcb.so.1 => /lib64/libxcb.so.1 (0x00007f42af78c000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00007f42af587000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f42b0b8d000)
+	libuuid.so.1 => /lib64/libuuid.so.1 (0x00007f42af382000)
+	libXau.so.6 => /lib64/libXau.so.6 (0x00007f42af17e000)
+
+
+To get a sorted list of every dynamic library that is used by any of the commands on the list, I first compiled a 
+file libs.txt with the contents being the output of invoking ldd on every command (without the “not a dynamic 
+executable” line since that’s not a dynamic library). I then ran the following command which removes the 
+address space of each dynamic library (since the addresses of many of the same libraries are different because 
+they are specific to different processes’ virtual memory) and then performs an unique sort. 
+
+> cat libs.txt | sed 's/[\(\)].*//' | sort -u -
+
+	/lib64/ld-linux-x86-64.so.2 
+	libacl.so.1 => /lib64/libacl.so.1 
+	libattica.so.0.4 => /lib64/libattica.so.0.4 
+	libattr.so.1 => /lib64/libattr.so.1 
+	libavahi-client.so.3 => /lib64/libavahi-client.so.3 
+	libavahi-common.so.3 => /lib64/libavahi-common.so.3 
+	libbfd-2.25.1-22.base.el7.so => /lib64/libbfd-2.25.1-22.base.el7.so 
+	libbz2.so.1 => /lib64/libbz2.so.1 
+	libcap.so.2 => /lib64/libcap.so.2 
+	libcom_err.so.2 => /lib64/libcom_err.so.2 
+	libcrypto.so.10 => /lib64/libcrypto.so.10 
+	libcrypt.so.1 => /lib64/libcrypt.so.1 
+	libc.so.6 => /lib64/libc.so.6 
+	libdbus-1.so.3 => /lib64/libdbus-1.so.3 
+	libdbusmenu-qt.so.2 => /lib64/libdbusmenu-qt.so.2 
+	libdl.so.2 => /lib64/libdl.so.2 
+	libexpat.so.1 => /lib64/libexpat.so.1 
+	libfam.so.0 => /lib64/libfam.so.0 
+	libffi.so.6 => /lib64/libffi.so.6 
+	libfontconfig.so.1 => /lib64/libfontconfig.so.1 
+	libfreebl3.so => /lib64/libfreebl3.so 
+	libfreetype.so.6 => /lib64/libfreetype.so.6 
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 
+	libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 
+	libgmodule-2.0.so.0 => /lib64/libgmodule-2.0.so.0 
+	libgobject-2.0.so.0 => /lib64/libgobject-2.0.so.0 
+	libgssapi_krb5.so.2 => /lib64/libgssapi_krb5.so.2 
+	libgstreamer-0.10.so.0 => /lib64/libgstreamer-0.10.so.0 
+	libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 
+	libhwloc.so.5 => /lib64/libhwloc.so.5 
+	libICE.so.6 => /lib64/libICE.so.6 
+	libjbig.so.2.0 => /lib64/libjbig.so.2.0 
+	libjli.so => /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.121-2.6.8.0.el7_3.x86_64/jre/lib/amd64/jli/libjli.so 
+	libjpeg.so.62 => /lib64/libjpeg.so.62 
+	libk5crypto.so.3 => /lib64/libk5crypto.so.3 
+	libkdecore.so.5 => /lib64/libkdecore.so.5 
+	libkdeinit4_nepomukserver.so => /lib64/libkdeinit4_nepomukserver.so 
+	libkdeui.so.5 => /lib64/libkdeui.so.5 
+	libkeyutils.so.1 => /lib64/libkeyutils.so.1 
+	libkrb5.so.3 => /lib64/libkrb5.so.3 
+	libkrb5support.so.0 => /lib64/libkrb5support.so.0 
+	liblcms2.so.2 => /lib64/liblcms2.so.2 
+	libldns.so.1 => /lib64/libldns.so.1 
+	libltdl.so.7 => /lib64/libltdl.so.7 
+	liblzma.so.5 => /lib64/liblzma.so.5 
+	libm.so.6 => /lib64/libm.so.6 
+	libnspr4.so => /lib64/libnspr4.so 
+	libnss3.so => /lib64/libnss3.so 
+	libnssutil3.so => /lib64/libnssutil3.so 
+	libnuma.so.1 => /lib64/libnuma.so.1 
+	libopenjpeg.so.1 => /lib64/libopenjpeg.so.1 
+	libpcap.so.1 => /lib64/libpcap.so.1 
+	libpcp.so.3 => /lib64/libpcp.so.3 
+	libpcre.so.1 => /lib64/libpcre.so.1 
+	libplc4.so => /lib64/libplc4.so 
+	libplds4.so => /lib64/libplds4.so 
+	libpng15.so.15 => /lib64/libpng15.so.15 
+	libpoppler.so.46 => /lib64/libpoppler.so.46 
+	libpopt.so.0 => /lib64/libpopt.so.0 
+	libpthread.so.0 => /lib64/libpthread.so.0 
+	libqca.so.2 => /lib64/libqca.so.2 
+	libQtCore.so.4 => /lib64/libQtCore.so.4 
+	libQtDBus.so.4 => /lib64/libQtDBus.so.4 
+	libQtGui.so.4 => /lib64/libQtGui.so.4 
+	libQtNetwork.so.4 => /lib64/libQtNetwork.so.4 
+	libQtSvg.so.4 => /lib64/libQtSvg.so.4 
+	libQtXml.so.4 => /lib64/libQtXml.so.4 
+	libresolv.so.2 => /lib64/libresolv.so.2 
+	librols.so.0 => /lib64/librols.so.0 
+	librt.so.1 => /lib64/librt.so.1 
+	libsasl2.so.3 => /lib64/libsasl2.so.3 
+	libselinux.so.1 => /lib64/libselinux.so.1 
+	libSM.so.6 => /lib64/libSM.so.6 
+	libsopranoclient.so.1 => /lib64/libsopranoclient.so.1 
+	libsopranoserver.so.1 => /lib64/libsopranoserver.so.1 
+	libsoprano.so.4 => /lib64/libsoprano.so.4 
+	libssl3.so => /lib64/libssl3.so 
+	libssl.so.10 => /lib64/libssl.so.10 
+	libstdc++.so.6 => /lib64/libstdc++.so.6 
+	libtiff.so.5 => /lib64/libtiff.so.5 
+	libtinfo.so.5 => /lib64/libtinfo.so.5 
+	libusal.so.0 => /lib64/libusal.so.0 
+	libuuid.so.1 => /lib64/libuuid.so.1 
+	libwmf-0.2.so.7 => /lib64/libwmf-0.2.so.7 
+	libwmflite-0.2.so.7 => /lib64/libwmflite-0.2.so.7 
+	libX11.so.6 => /lib64/libX11.so.6 
+	libXau.so.6 => /lib64/libXau.so.6 
+	libxcb.so.1 => /lib64/libxcb.so.1 
+	libXcursor.so.1 => /lib64/libXcursor.so.1 
+	libXext.so.6 => /lib64/libXext.so.6 
+	libXfixes.so.3 => /lib64/libXfixes.so.3 
+	libXft.so.2 => /lib64/libXft.so.2 
+	libXinerama.so.1 => /lib64/libXinerama.so.1 
+	libXi.so.6 => /lib64/libXi.so.6 
+	libxml2.so.2 => /lib64/libxml2.so.2 
+	libXmu.so.6 => /lib64/libXmu.so.6 
+	libXpm.so.4 => /lib64/libXpm.so.4 
+	libXrandr.so.2 => /lib64/libXrandr.so.2 
+	libXrender.so.1 => /lib64/libXrender.so.1 
+	libXt.so.6 => /lib64/libXt.so.6 
+	libXtst.so.6 => /lib64/libXtst.so.6 
+	libz.so.1 => /lib64/libz.so.1 
+	linux-vdso.so.1 =>  

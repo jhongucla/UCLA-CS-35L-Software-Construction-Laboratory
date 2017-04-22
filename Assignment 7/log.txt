@@ -1,0 +1,76 @@
+My partner for this lab was Kedar Thiagarajan. I first created a server on my machine with my partner as the client and then switched.
+
+I started the lab by booting into Ubuntu from the disk drive on the lab computer. After the operating system booted up, I opened a terminal window and started typing commands.
+
+I ran the following command to check that the OpenSSH files are present:
+> dpkg --get-selections | grep openssh
+
+I wanted to have a fresh install of the OpenSSH files so I first removed the server and client packages using the following commands:
+> sudo apt-get purge openssh-server
+> sudo apt-get purge openssh-client
+
+Next I tried to reinstall the OpenSSH packages using the following commands:
+> sudo apt-get install openssh-server
+> sudo apt-get install openssh-client
+
+It appeared that apt-get was not properly installing the packages so I tried updating the package lists using the following command to see if that would fix the problem:
+> sudo apt-get update
+
+I then tried again to install the OpenSSH packages using the same commands as above and this time it worked.
+
+Now I could start creating the server and setting up my partner as a client.
+
+I first ran the following command to generate RSA keys for SSH connections on the server:
+> ssh-keygen
+
+I chose to set no password for this key.
+
+Next I found the IP address of my computer by running ifconfig and noting the ethernet IP address of the en0 connection.   
+
+Now I could add an user for my partner using the following command which creates a directory for the user in the home directory and adds the user with the specified username:
+> sudo useradd -d /home/kedar/ -m kedar
+
+I also set a password for the new user using the following command:
+> sudo passwd kedar
+
+Next I created a ssh directory for the new user that they could use by running the following commands:
+> cd /home/kedar
+> sudo mkdir .ssh
+
+I also made the user the owner of the directory and gave them permissions to read, write, and execute in the directory by running the following commands:
+> sudo chown -R kedar .ssh
+> sudo chmod 700 .ssh
+
+The last step I had to take as the server was to disable password-based authentication. To do that I had to modify a ssh_config file. I first tried to do that by running 
+the following command but it appeared that I did not have write permissions for the file. 
+> emacs /etc/ssh/sshd_config
+
+I realized that I had run emacs as root to edit the file.
+> sudo emacs /etc/ssh/sshd_config
+
+I quickly found the line "PasswordAuthentication" and changed the option to "no".
+
+Now I gave my computer's IP address which I had previously found to my partner and he successfully logged into my server. He used the same commands to log in and 
+test the connection as I did which I have detailed below.
+
+To start as a client I first copied the public key over the server using the following command:
+> cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+
+I then added my private key to the ssh directory in the server using the following command (the user my partner created was called justin):
+> ssh-copy-id -i justin@10.97.85.150
+
+I also ran the command ssh-add which allows me to not have to enter a password to log into the server after the first time by adding the password to the ssh directory.
+
+Now I logged into the server with the following command:
+> ssh justin@10.97.85.150
+
+I created a file to test if both my partner and I could see the file on the server.
+> touch justin.txt
+
+I then logged off the server and logged in again, this time with the ability to open programs and windows.
+> exit
+> ssh -X justin@10.97.85.150
+
+I tested it by opening a shell window and firefox on my host.
+> firefox
+> xterm

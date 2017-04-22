@@ -1,0 +1,88 @@
+Exercise 1.1
+
+C-s P U B L I C
+C-s L a b o r a t o r y M-b
+C-s s e l f - r e f e r e n t i a l M-b M-b
+C-s a r r o w M-b
+C-e
+C-a
+C-x C-c
+
+Exercise 1.2
+
+M-g M-g Enter 1 8 Enter
+C-k
+C-s < ! - - C-a C-k
+C-s < ! - - C-a C-k C-k C-k C-k
+C-s < ! - - C-b C-b C-b C-b M-z >
+C-s < ! - - C-a C-k
+C-x C-c
+
+Exercise 1.3
+
+C-s A s s i g n m e n t SP 1 M-% A s s i g n m e n t SP 3 7 Enter y y
+C-s U T F - 8 M-% U S - A S C I I Enter y
+C-s < / o l > C-a Enter
+C-x C-s Enter y e s
+
+Exercise 1.4
+
+M-> C-r - < Right C-SP C-e M-w M-g M-g 337 C-y C-k
+M-> C-r - < C-r Right C-SP Down Down Down M-w M-g M-g 298 
+Down Down Down C-y Enter Up C-d Up C-d
+M-> M-r C-r - < Right C-SP C-e M-w M-g M-g 91 Down Down Down C-y
+M-> M-r C-r - < C-r Right C-SP C-e M-w M-g M-g 15 Down Down Down C-y
+M-> C-r - - - C-SP M-> C-w
+C-x-u
+C-r < / h t m l C-e C-o Down < ! - - M-> - - >
+M-< M-x r e p l a c e - s t r i n g < o l > Enter < O l > Enter
+C-x C-c y
+
+Exercise 1.5
+
+M-x m - d i r Enter junk Enter
+C-x C-f j u n k / h e l l o . c Enter
+Copy and paste the source code into emacs
+M-x c o m p i l e Enter Backspace Backspace Backspace Backspace Backspace 
+Backspace Backspace Backspace g c c SP h e l l o . c Enter y
+C-x b h e l l o - o u t Enter
+C-u M-! . / a . o u t Enter
+#include <stdio.h>
+int
+main (void)
+{
+  char n = '\n';
+  char b = '\\';
+  char q = '"';
+  char const *p = "#include <stdio.h>%cint%cmain 
+(void)%c{%c  char n = '%cn';%c  char b \
+= '%c%c';%c  char q = '%c';%c  char const *p = 
+%c%s%c;%c  printf (p, n, n, n, n, b, n, b\
+, b, n, q, n, q, p, q, n, n, n, n);%c  return 0;%c}%c";
+  printf (p, n, n, n, n, b, n, b, b, n, q, n, q, p, q, n, n, n, n);
+  return 0;
+}
+C-SP M-> C-w C-x C-f k e y 1 . t x t M-> C-y
+
+Exercise 1.6
+
+C-x b * s c r a t c h * Enter
+( r a n d o m ) C-j
+( s e t q SP x SP ( r a n d o m ) ) C-j
+( s e t q SP y SP ( r a n d o m ) ) C-j
+( s e t q SP z SP ( r a n d o m ) ) C-j
+( * SP x SP y) C-j
+The product is 1170472876165346387, which is not the correct answer 
+since one of the variables is a negative number. 
+M-: ( * SP x SP y) C-j
+The output is the same except now the octal and hex values 
+are also included in the output.
+The two random integers are not truly random in the mathematical 
+sense because integers have a limited range in Elisp while they 
+have an infinite mathematical range. The integers are pseudo-random 
+as they are generated from a seed. 
+Assuming that (random) is truly random, the probability that the 
+product would be mathematically incorrect is around 0.99999999868.
+I calculated this by finding the range of numbers that would 
+result in an overflow when multiplied and then finding the 
+probability that these numbers would be randomly chosen which should be [(2^61-sqrt(2^61)/2^61]^2.

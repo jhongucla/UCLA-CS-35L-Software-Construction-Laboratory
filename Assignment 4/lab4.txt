@@ -1,0 +1,76 @@
+To start the lab, I downloaded and unzipped the old version of coreutils posted on the website using the following commands:
+> wget http://web.cs.ucla.edu/classes/winter17/cs35L/assign/coreutils-with-bug.tar.gz
+> tar -xvf coreutils-with-bug.tar.gz
+
+I then attempted to build this old version of coreutils as-is by going into the new zipped directory and configuring and making it using the following commands:
+> cd coreutils-with-bug.tar.gz
+> ./configure
+> make
+
+The build failed with the following errors:
+In file included from utimecmp.c:41:0:
+utimens.h:2:5: error: conflicting types for 'futimens'
+ int futimens (int, char const *, struct timespec const [2]);
+     ^~~~~~~~
+In file included from utimecmp.h:25:0,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+ extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+            ^~~~~~~~
+
+To fix these issues, I downloaded the patch from the website using the following command:
+> wget http://web.cs.ucla.edu/classes/winter17/cs35L/assign/coreutils.diff
+
+After the patch was downloaded to the coreutils-with-bug directory, I applied the patch and then remade coreutils using the following commands:
+> patch -p0 < coreutils.diff
+> make
+
+This time the patched version of coreutils was successfully built. After looking at the contents of the coreutils.diff patch file, I found that the renaming patch 
+renamed many functions in numerous files in the package. It added "coreutils_" to the beginning of the function names. It appears that the functions were incorrectedly 
+named in the source files so the original build failed with conflicting types for functions.
+
+Next I created a temporary directory with three files created at different times and used the broken ls program from the coreutils-with-bug package to see the buggy output.
+> tmp=$(mktemp -d)
+> cd $tmp
+> touch -d '1918-11-11 11:00 GMT' wwi-armistice
+> touch now
+> sleep 1
+> touch now1
+> TZ=UTC0 ~/Lab4/coreutils-with-bug/src/ls -lt --full-time wwi-armistice now now1
+
+The output is below. wwi-armistice should be the third item, not the first one since it is the oldest file.
+
+-rw-r--r-- 1 jianan csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 jianan csugrad 0 2017-01-31 23:07:15.913660474 +0000 now1
+-rw-r--r-- 1 jianan csugrad 0 2017-01-31 23:07:10.671520744 +0000 now
+
+I then used the GDB debugger to find out what went wrong. I ran the following command to open the broken ls program using GDB.
+> gdb --args ~/Lab4/coreutils-with-bug/src/ls -lt
+
+Next I ran the following command in gdb to see a list of the functions.
+(gdb) info functions
+
+Looking at the list of functions, I found three functions compare_atime, compare_ctime, and compare_mtime that sounded like they could have something to do with the bug. 
+I chose to examine compare_mtime first so I set a breakpoint at that function and ran the program using the following commands.
+(gdb) break compare_mtime
+(gdb) run
+(gdb) si
+
+This takes us to a function timespec_cmp in timespec.h. There is one line in the function "int diff = a.tv_sec - b.tv_sec;" which could be the source of the issue. 
+Integer overflow is a possibility as a result of the operation. 
+
+To fix this problem, I created a copy of the timespec.h file and fixed the problem in the timespec_cmp function by making the function return -1 if a.tv_sec < b.tv_sec 
+or 1 if a.tv_sec > b.tv_sec or 0 if a.tv_sec == b.tv_sec. I then created a diff file from the old file and the new file using the following command.
+> diff -u timespec.h timespec_new.h > lab4.diff 
+
+I then created a change log entry by using
+> C-x 4 a 
+in emacs.
+
+Next I tried to reproduce the problem in my home directory using the already-installed touch and ls utilities and found the output to be 
+-rw-r--r-- 1 jianan csugrad 0 2054-12-17 17:28:16.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 jianan csugrad 0 2017-02-02 04:58:11.104529000 +0000 now1
+-rw-r--r-- 1 jianan csugrad 0 2017-02-02 04:58:05.368343000 +0000 now
+
+We see the year 2054 because the time is shown in seconds from the Unix Epoch in 1970. The SEASnet server are 64 bit while the files I touched have time in 32 bits. 
+Therefore any timestamp before the Unix Epoch is changed to after the Unix Epoch in 64 bits so 1918 is represented as 2054.

@@ -1,0 +1,9 @@
+The top left subwindow displays the structure of the repository, including the head, the master branch, and the commits.
+
+The top center subwindow shows information about the author of each commit.
+
+The top right subwindow gives the date and time of each commit.
+
+The bottom left subwindow displays specific information about the commit such as the author, the parent and child commits, the timestamp, the ChangeLog, and changes in diff format.
+
+The bottom right subwindow shows the files that were changed by the commit.

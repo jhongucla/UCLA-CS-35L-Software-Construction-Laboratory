@@ -1,0 +1,87 @@
+1. I used “man -k word” where word is the word we are looking 
+for. I found this by using “man man” and looking in the man page for man.
+
+2. The cp program is found in /usr/local/cs/bin/cp and the 
+wc program is found in /usr/local/cs/bin/wc. I found the locations 
+by using the which command.
+
+3. After discovering that the commands are located in 
+/usr/bin, I used the command “find /usr/bin -name “?”” to 
+find the one character long commands.
+[ command evaluates conditional expressions.
+w command shows who is logged on and what they are doing.
+
+4. The file actually executed is /etc/alternatives/emacs. 
+I found this by going into the /usr/bin folder and using 
+“ls -l”. The symbolic link between emacs and the file is clearly shown.
+
+5. By looking in the man page for chmod, I found that g+s 
+sets the permission of a user accessing the file to that 
+of other users in the file’s group since g stands for 
+other users in the file’s group. o-x removes the permission 
+to execute the file for other users not in the file’s group 
+since o stands for other users not in the file’s group.
+
+6. The option “-mtime -21” lets us search for files that 
+have been modified in the last three weeks. I found this 
+by looking in the man page for find and finding the mtime option.
+
+7. To find all directories modified in the last three 
+weeks, I used “find / -type d -mtime -21” which looks 
+for directories modified in the last 21 days in the root directory. 
+
+8. The find program is located in the usr/bin directory. 
+I used “ls -l | grep ^l | wc -l” to find the number of 
+symbolic links in the same directory. ls -l lists all 
+the files while grep ^l finds only the lines starting 
+with “l” (denoting a symbolic link). wc -l then counts 
+the number of lines, which is the same as the number 
+of symbolic links. I found 247 symbolic links.
+
+9. I found the oldest regular file by first listing 
+all the files with the time that it was modified in 
+front and then finding only the regular files by looking 
+for the ones with a line that starts with -. The commands 
+I used were “ls -l -t | grep ^-“. Finally I found the 
+file at the bottom to be the oldest one, libfreeblpriv3.so.
+
+10. I looked in the man page for locale and found that 
+the locale command gets its data as directed by the environment variables.
+
+11. I found the commands in Emacs that have sort in their 
+name by using the command “C-h a” as detailed on the cheat sheet. 
+Buffer-menu-sort
+sort-columns
+sort-fields
+sort-lines
+sort-numeric-fields
+sort-pages
+sort-paragraphs
+sort-regexp-field
+tabulated-list-col-sort
+tabulated-list-sort
+
+12. I found the commands by first using the command “C-h b” 
+to pull up the list of key translations. Then I searched 
+for the “C-M-a” command by using the command “C-s” to 
+start a search. I entered the help page of each 
+command to find out what it does.
+C-M-a beginning-of-defun - Move backward to the beginning of a defunct
+C-M-b backward-sexp - Move backward across one balanced expression (sexp)
+C-M-c exit-recursive-edit - Exit from the innermost recursive edit or minibuffer
+C-M-d down-list - Move forward down one level of parentheses
+C-M-e end-of-defun - Move forward to next end of defun
+C-M-f forward-sexp - Move forward across one balanced expression (sexp)
+C-M-h mark-defun - Put mark at end of this defun, point at beginning
+
+13. By using the same method as 12, I found the help 
+page for the “C-g” command and discovered that it signals 
+a “quit” condition. Also during execution of Lisp code, 
+this character causes a quit directly.
+
+14. Using the same method as 12, I found the help page 
+for the yank function. Yank reinserts (“pastes”) 
+the last stretch of killed text.
+
+15. It appears that the only difference is that dired includes 
+the current and parent directory (. and ..) in the list while ls -l does not.

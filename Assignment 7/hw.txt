@@ -1,0 +1,14 @@
+1. If the other teams had been observing the bytes going across the network, the resulting network is still secure since the data would be encrypted with an authentication 
+process involving a public key and a private key. The other teams would not be able to see the receiver's private key since it is not sent over the network. Any data sent 
+after authentication is encrypted with a session key created with the public and private key. Other teams would also not be able to decrypt this data since they can't see the private key.
+
+(1) If the other teams could observe all of my team's keystrokes, the resulting network would not be secure. They can read the passphrase my team uses as the private key 
+for authentication and thus would be able to decrypt the authentication and create a session key that would allow them to decrypt all the data sent over the network.
+
+(2) If the other teams had physical control of the USB, the resulting network would not be secure. They could give themselves root permissions and be able to access the 
+.ssh directories with the public and private keys. This would allow them to decrypt any data in my team's network. 
+
+2. gpg --verify doesn't really verify that I personally created the tar file because it can only verfiy the integrity of the file and not the original owner or sender. 
+It compares the signature to the data after it has been decrypted with a public key. An attacker could intercept the data and sign it with his own private key and 
+gpg --verify would indicate the integrity of the data is intact without verifying the original sender. A solution would be to use a trusted third party to keep track of 
+which public key belongs to whom, thus tracking the origin of the file with its creator. This certificate-like mechanism would solve the problem.

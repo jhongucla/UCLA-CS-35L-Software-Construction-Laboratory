@@ -1,0 +1,10 @@
+#!/bin/sh
+
+grep -E '<td>.+</td>' | \
+sed 's/<[^>]*>//g' | \
+sed '1~2d' | \
+tr "A-Z\`" "a-z\'" | \
+sed "s/^\s*//g" | \
+sed -E "s/,\s|\s/\n/g" | \
+grep "^[pk\' mnwlhaeiou]\{1,\}$" | \
+sort -u

@@ -1,0 +1,37 @@
+I used the time command to compare the performance of sfrob, sfrobu, scrubs, sfrobu -u, and sfrobs -f.
+
+I created a text file with 100 lines and ran with it with each program.
+
+> time ./sfrob < test.txt
+
+real	0m0.012s
+user	0m0.004s
+sys	0m0.002s
+
+> time ./sfrobu < test.txt
+
+real	0m0.017s
+user	0m0.005s
+sys	0m0.009s
+
+> time ./sfrobs < test.txt
+
+real	0m0.053s
+user	0m0.035s
+sys	0m0.018s
+
+> time ./sfrobu -f < test.txt
+
+real	0m0.016s
+user	0m0.005s
+sys	0m0.008s
+
+> time ./sfrobs -f < test.txt
+
+real	0m0.032s
+user	0m0.035s
+sys	0m0.014s
+
+We can see that sfrob has a lower sys time than sfrobu since it makes much fewer system calls. However the real times are quite similar for both programs. 
+It seems that the addition of the -f option doesn’t significantly change the times as expected since changing to uppercase doesn’t really impact the times. 
+sfrobs is the slowest program since it runs in bash which is much slower than the C code in sfrob and sfrobu.

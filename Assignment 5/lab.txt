@@ -1,0 +1,125 @@
+I created two programs that transliterate text in the fashion of the tr command. The first , tr2b.c, uses getchar and putchar, while the second, tr2u.c, uses read and write. 
+A large portion of the programs were identical, such as checking the number of arguments passed in, checking that the arguments are the same length, and checking that the 
+from argument doesn’t contain any duplicates. 
+
+The transliteration process is also very similar between the two programs. I used getchar or read to read a single byte and compare it to the characters in the from argument 
+and then either wrote the same byte or the corresponding character in the to argument depending on whether the byte was in the from argument. 
+
+I then used the strace command to compare the system calls of my programs. To create the file of at least 5,000,000 bytes, I used the following command to create a random file.
+> dd if=dev/urandom of=random.txt bs=5M count=1
+
+I compiled my tr2b.c and tr2u.c programs using the following commands:
+> gcc -o tr2b tr2b.c
+> gcc -o tr2u tr2u.c
+
+I first compared the system calls by the programs when copying one file to another by using the following command with strace to count the number of system calls.
+
+I first used the buffered version of the program. 
+> strace -c ./tr2b abc xyz < random.txt > bcopy.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 26.09    0.000036          18         2           read
+ 25.36    0.000035           4         9           mmap
+ 11.59    0.000016           4         4           mprotect
+  7.97    0.000011           6         2           open
+  7.25    0.000010          10         1           write
+  7.25    0.000010           3         4           fstat
+  5.07    0.000007           7         1           munmap
+  2.90    0.000004           4         1         1 access
+  2.17    0.000003           2         2           close
+  2.17    0.000003           3         1           execve
+  1.45    0.000002           2         1           arch_prctl
+  0.72    0.000001           1         1           brk
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000138                    29         1 total
+
+This resulted in 29 system calls.
+
+I then tested the unbuffered version of the program.
+> strace -c ./tr2u abc xyz < random.txt > ucopy.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 54.76    5.817896           1   5242880           write
+ 45.24    4.806894           1   5242882           read
+  0.00    0.000036           5         7           mmap
+  0.00    0.000025           6         4           mprotect
+  0.00    0.000014           7         2           open
+  0.00    0.000010          10         1           munmap
+  0.00    0.000007           7         1         1 access
+  0.00    0.000007           7         1           execve
+  0.00    0.000006           3         2           close
+  0.00    0.000006           3         2           fstat
+  0.00    0.000004           4         1           brk
+  0.00    0.000003           3         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   10.624908              10485784         1 total
+
+This resulted in 10485784 system calls. This is due to read and write making two system calls for each byte in the file while the data is stored in a buffer when using 
+getchar and putchar resulting in fewer system calls.
+
+Next I compared the system calls by the programs when copying a file to the terminal.
+
+I first tested the buffered version of the program.
+> strace -c ./tr2b abc xyz < random.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 26.95    0.000038          19         2           read
+ 24.82    0.000035           4         9           mmap
+ 11.35    0.000016           4         4           mprotect
+  8.51    0.000012          12         1           munmap
+  6.38    0.000009           5         2           open
+  6.38    0.000009           2         4           fstat
+  5.67    0.000008           8         1           write
+  3.55    0.000005           5         1           execve
+  2.84    0.000004           4         1         1 access
+  1.42    0.000002           1         2           close
+  1.42    0.000002           2         1           brk
+  0.71    0.000001           1         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000141                    29         1 total
+
+This resulted in 29 system calls.
+
+I then tested the unbuffered version of the program.
+> strace -c ./tr2u abc xyz < random.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 55.18    6.424611           1   5242880           write
+ 44.82    5.217871           1   5242882           read
+  0.00    0.000045           6         7           mmap
+  0.00    0.000029           7         4           mprotect
+  0.00    0.000016           8         2           open
+  0.00    0.000015           8         2           fstat
+  0.00    0.000010          10         1           munmap
+  0.00    0.000008           4         2           close
+  0.00    0.000008           8         1         1 access
+  0.00    0.000007           7         1           execve
+  0.00    0.000005           5         1           brk
+  0.00    0.000004           4         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   11.642629              10485784         1 total
+
+This resulted in 10485784 system calls.
+
+In both cases when copying one file to another and copying a file to the terminal, the buffered version of the program makes far fewer system calls.
+
+I then used the time command to measure how much faster the buffered version of the program is compared to the unbuffered version when copying the file of 5,000,000 
+bytes created before. I ran the following commands and found the following results:
+> time ./tr2b abc xyz < random.txt > bcopy.txt
+
+real	0m0.004s
+user	0m0.001s
+sys	0m0.001s
+
+> time ./tr2u abc xyz < random.txt > ucopy.txt
+
+real	0m6.802s
+user	0m0.389s
+sys	0m6.342s
+
+The buffered version of the program is significantly faster than the unbuffered version due to the use of the buffered getchar and putchar versus the 
+unbuffered read and write.

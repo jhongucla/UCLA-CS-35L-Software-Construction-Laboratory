@@ -1,0 +1,145 @@
+I started the lab by getting a copy of the Diffutils repository by using the following command:
+> git clone https://git.savannah.gnu.org/git/diffutils.git 
+
+Next I put a log of changes to Diffutils’ master branch into a file git-log.txt by using the following command:
+> git log > git-log.txt
+
+I also generated a list of tags for Diffutils and put it into a file git-tags.txt by using the following command:
+> git tag > git-tags.txt
+
+I then looked for a commit entitled “maint: quote 'like this' or "like this", not `like this'” in the git-log.txt file by using emacs with the following commands:
+> emacs git-log.txt
+C-s maint: quote 'like this' or "like this", not `like this’
+
+I copied that commit’s commit ID and then ran the following command to generate the patch and put it into a file quote-patch.txt:
+> git show 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f > quote-patch.txt
+
+I then checked out version 3.0 of Diffutils from my repository by running the following command:
+> git checkout v3.0
+
+Next I applied the patch to version 3.0 using the following command:
+> patch -p1 < quote-patch.txt
+
+The patch command couldn’t find some files to patch so I just skipped past those with RETURN.
+
+Some errors were:
+1 out of 1 hunk ignored
+Hunk #1 FAILED at 9.
+Hunk #3 FAILED at 60.
+2 out of 3 hunks FAILED -- saving rejects to file README.rej
+Hunk #1 FAILED at 19.
+1 out of 1 hunk FAILED -- saving rejects to file README-hacking.rej
+Hunk #1 FAILED at 29.
+1 out of 1 hunk FAILED -- saving rejects to file cfg.mk.rej
+1 out of 1 hunk ignored
+9 out of 9 hunks ignored
+Hunk #10 FAILED at 876.
+Hunk #11 FAILED at 906.
+Hunk #12 FAILED at 942.
+3 out of 14 hunks FAILED -- saving rejects to file src/diff.c.rej
+Hunk #6 FAILED at 433.
+1 out of 9 hunks FAILED -- saving rejects to file src/diff3.c.rej
+
+I then got an overview of what happened with
+> git status 
+
+This gave me an output with all the modified files as well as untracked files:
+
+HEAD detached at v3.0
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   NEWS
+	modified:   README
+	modified:   TODO
+	modified:   doc/diagmeet.note
+	modified:   ms/config.bat
+	modified:   ms/config.site
+	modified:   po/en.po
+	modified:   src/analyze.c
+	modified:   src/cmp.c
+	modified:   src/context.c
+	modified:   src/diff.c
+	modified:   src/diff.h
+	modified:   src/diff3.c
+	modified:   src/dir.c
+	modified:   src/ifdef.c
+	modified:   src/io.c
+	modified:   src/sdiff.c
+	modified:   src/side.c
+	modified:   src/system.h
+	modified:   src/util.c
+	modified:   tests/help-version
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	NEWS.orig
+	README-hacking.orig
+	README-hacking.rej
+	README.orig
+	README.rej
+	cfg.mk.orig
+	cfg.mk.rej
+	ms/config.site.orig
+	quote-patch.txt
+	src/cmp.c.orig
+	src/context.c.orig
+	src/diff.c.orig
+	src/diff.c.rej
+	src/diff.h.orig
+	src/diff3.c.orig
+	src/diff3.c.rej
+	src/dir.c.orig
+	src/sdiff.c.orig
+	src/system.h.orig
+	src/util.c.orig
+	tests/help-version.orig
+
+I then began to use emacs to revert all the changes to files other than .c files. I did by using the vc-diff and vc-revert functions. After I opened each file that doesn’t end with .c, I ran the commands C-x v = (vc-diff) and C-x v u (vc-revert) and then typed "yes" before quitting with C-x C-c.  
+
+I also reverted all the changes to .c files other than changes to character string constants by using the command C-x v = (vc-diff) to look at the changes made in the files and undid all the changes other than changes to character string constants by using the command C-u C-c C-a (diff-apply-hunk). 
+
+Next I used emacs to open the files in the src directory ending in .c.rej (diff.c.rej and diff3.c.rej) and manually copied the patches into the corresponding files (diff.c and diff3.c).
+
+Now we can remove the untracked files in the output of git status by using the following command:
+> git clean -f
+
+At this point, I confirmed that git status reports a half-dozen modified files.
+
+HEAD detached at v3.0
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   src/cmp.c
+	modified:   src/diff.c
+	modified:   src/diff3.c
+	modified:   src/dir.c
+	modified:   src/sdiff.c
+	modified:   src/util.c
+
+I used the following command to output a patch of the modifications in diffutils into a file quote-3.0-patch.txt:
+> git diff > quote-3.0-patch.txt
+
+Now I could build the modified version of Diffutils. I first made sure that I was on an older linux server such as lnxsrv01 and then I ran the following commands described in the file README-hacking:
+> ./bootstrap
+> ./configure
+> make
+> make check
+
+When I tested this new modified diff with the following commands, diff used apostrophes appropriately:
+> src/diff . -
+> src/diff --help
+
+Now I did a sanity check by using the newly modified version of diff to compare the source code of Diffutils 3.0 to the source code of the newly modified version. I first made a directory diffutils-3.0-patch and copied my modified source code into it and then I got a copy of the original v3.0 repository and put it in a directory diffutils-3.0. After that I ran diff on the two versions and saved the output into a file quote-3.0-test.txt. The commands are as follows:
+> cp -r diffutils/src diffutils-3.0-patch
+> git clone https://git.savannah.gnu.org/git/diffutils.git diffutils_orig
+> cp -r diffutils_orig/src diffutils-3.0
+> diffutils/src/diff -pru diffutils-3.0 diffutils-3.0-patch > quote-3.0-test.txt
+
+Finally I used diff again to compare the contents of quote-3.0-test.txt and quote-3.0-patch.txt by running the following command:
+> diff -u quote-3.0-test.txt quote-3.0-patch.txt
+
+The files are not identical but the differences are innocuous as they are all differences between the apostrophe and grave accent characters which have no effect on the actual function of diff.

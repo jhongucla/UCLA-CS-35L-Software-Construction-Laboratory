@@ -1,0 +1,41 @@
+Q1.
+Brady removed the line most likely to clean up the code. 
+Since the line is repeated twice and is part of a switch 
+statement, having the line twice would not make a 
+difference, since execution would fall through to 
+the second line anyway. Therefore it is not necessary 
+to remove the line.
+
+Q2.
+The patched version displays the date in a format 
+familiar to the English speaking world, but it may be 
+foreign to users who don’t speak English and are not 
+familiar with English-format dates. International users 
+could have trouble interpreting the output of ls -l. 
+Another issue that could arise is that programs and 
+scripts that depend on the specific date format in the 
+unpatched version could now produce unpredictable results 
+now that the format has been changed. 
+
+Q3.
+If we invoke randline.py on an empty file like /dev/null, 
+we get output such as
+File "/usr/local/cs/Python-2.7.12/lib/python2.7/random.py", 
+line 275, in choice
+    return seq[int(self.random() * len(seq))]  
+# raises IndexError if seq is empty
+IndexError: list index out of range
+This is because randline.py assumes that the file is not 
+empty so seq must have something in it. If invoked on an 
+empty file, seq is empty and we get an index error.
+
+Q4.
+When randline.py is invoked with Python 3, the following 
+is outputted:
+  File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+This occurs because in Python 3, automatic tuple unpacking 
+has been deprecated. Therefore, the syntax for passing in 
+a tuple to an exception is invalid in Python 3.

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+dir=$1
+cd "$dir"
+
+declare -a regfiles
+
+regfile=`ls -a | sort`
+
+let iter=0
+
+for FILE in $regfile
+do
+    if [ ! -r "$FILE" ]
+    then
+	echo "You do not have permissions for the file $FILE"
+    fi
+    if [[ ! -L "$FILE" &&  -f "$FILE" ]]
+    then
+        regfiles[$iter]="$FILE"
+	let iter=iter+1
+    fi
+done
+
+let iter=iter-1
+
+for i in `seq 0 $iter`
+do
+    if [ -r "${regfiles[$i]}" ]
+    then
+	next=i
+        let next=next+1
+	for j in `seq $next $iter`
+	do
+	    cmp -s -- "${regfiles[$i]}" "${regfiles[$j]}"
+	    if [ $? -eq 0 ]
+	    then
+		    name="${regfiles[$j]}"
+		    rm -- "${regfiles[$j]}"
+		    ln -- "${regfiles[$i]}" "$name"
+	    fi
+	 done
+     else
+         echo "The file is not readable"
+     fi
+done
